@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hot Chicken Sarmada</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #ff6b35;
+            --secondary: #f7c331;
+            --dark: #0f0f0f;
+            --card: #1a1a1a;
+            --text: #ffffff;
+            --text-muted: #a0a0a0;
+            --green: #25D366;
+        }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: var(--dark);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--dark); }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+
+        /* Loading */
+        .loading-overlay {
+            position: fixed; inset: 0; background: var(--dark); z-index: 99999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+            transition: opacity 0.6s, visibility 0.6s;
+        }
+        .loading-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .loading-logo { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; font-size: 2rem; animation: pulse-glow 2s infinite; }
+        @keyframes pulse-glow { 0%,100% { transform: scale(1); box-shadow: 0 0 30px rgba(255,107,53,0.3); } 50% { transform: scale(1.1); box-shadow: 0 0 50px rgba(255,107,53,0.6); } }
+        .loading-bar { width: 150px; height: 3px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
+        .loading-bar::after { content: ''; display: block; width: 40%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: 10px; animation: load-slide 1.5s infinite; }
+        @keyframes load-slide { 0% { transform: translateX(-150%); } 100% { transform: translateX(350%); } }
+
+        /* Particles */
+        .particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+        .particle { position: absolute; border-radius: 50%; background: var(--primary); opacity: 0.12; animation: float-up linear infinite; }
+        @keyframes float-up { 0% { transform: translateY(100vh) scale(0); opacity: 0; } 20% { opacity: 0.12; } 80% { opacity: 0.12; } 100% { transform: translateY(-10vh) scale(1); opacity: 0; } }
+
+        /* Navbar */
+        .navbar { position: fixed; top: 0; width: 100%; padding: 14px 5%; display: flex; justify-content: space-between; align-items: center; z-index: 1000; background: rgba(15,15,15,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,107,53,0.15); transition: all 0.3s; }
+        .navbar.scrolled { background: rgba(15,15,15,0.95); box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
+        .logo { font-size: 1.3rem; font-weight: 900; color: var(--primary); display: flex; align-items: center; gap: 10px; text-shadow: 0 0 20px rgba(255,107,53,0.3); }
+        .logo .fire-icon { color: #e63946; font-size: 1.5rem; animation: flicker 2s infinite; }
+        @keyframes flicker { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.15); } }
+        .logo span { color: var(--secondary); }
+        .nav-links { display: flex; list-style: none; gap: 6px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.08); }
+        .nav-links a { color: var(--text-muted); text-decoration: none; font-weight: 600; font-size: 0.8rem; padding: 8px 16px; border-radius: 50px; transition: all 0.3s; position: relative; }
+        .nav-links a:hover, .nav-links a.active { color: var(--primary); background: rgba(255,107,53,0.1); }
+        .nav-links a.active::after { content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 16px; height: 3px; background: var(--primary); border-radius: 10px; }
+
+        /* Hero */
+        .hero { min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; position: relative; padding-top: 80px; background: radial-gradient(ellipse at center, rgba(255,107,53,0.08) 0%, transparent 70%), linear-gradient(180deg, var(--dark) 0%, #121212 100%); overflow: hidden; }
+        .hero-content { position: relative; z-index: 2; padding: 20px; max-width: 700px; }
+        .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,107,53,0.15); border: 1px solid rgba(255,107,53,0.3); color: var(--primary); padding: 8px 18px; border-radius: 50px; font-size: 0.8rem; font-weight: 700; margin-bottom: 25px; animation: fade-up 0.8s ease-out; }
+        @keyframes fade-up { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .hero-logo-wrap { width: 160px; height: 160px; margin: 0 auto 25px; position: relative; }
+        .hero-logo-glow { position: absolute; inset: -15px; border-radius: 50%; background: radial-gradient(circle, rgba(255,107,53,0.3) 0%, transparent 70%); animation: glow-pulse 3s infinite; }
+        @keyframes glow-pulse { 0%,100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 1; } }
+        .css-logo { width: 100%; height: 100%; border-radius: 50%; background: linear-gradient(135deg, var(--primary), #e63946, var(--secondary)); display: flex; flex-direction: column; align-items: center; justify-content: center; border: 3px solid rgba(255,255,255,0.1); box-shadow: 0 0 30px rgba(255,107,53,0.3), inset 0 0 20px rgba(0,0,0,0.2); position: relative; z-index: 1; animation: float 6s ease-in-out infinite; }
+        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+        .css-logo::before { content: '🔥'; position: absolute; top: 18px; font-size: 1.4rem; animation: flicker 1.5s infinite; }
+        .logo-text-main { font-size: 1.5rem; font-weight: 900; color: #fff; line-height: 1.2; }
+        .logo-text-sub { font-size: 0.8rem; font-weight: 700; color: rgba(255,255,255,0.9); letter-spacing: 3px; margin-top: 4px; }
+        .hero-content h1 { font-size: 3rem; font-weight: 900; margin-bottom: 10px; line-height: 1.1; animation: fade-up 0.8s ease-out 0.2s both; }
+        .hero-content h1 .hot { color: var(--primary); text-shadow: 0 0 30px rgba(255,107,53,0.5); }
+        .hero-content h1 .chicken { color: var(--secondary); }
+        .sarmada-text { font-size: 1.2rem; color: var(--text-muted); letter-spacing: 8px; text-transform: uppercase; margin-bottom: 20px; animation: fade-up 0.8s ease-out 0.4s both; }
+        .hero-content p { font-size: 1rem; color: var(--text-muted); max-width: 450px; margin: 0 auto 30px; animation: fade-up 0.8s ease-out 0.6s both; }
+        .cta-btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 36px; background: linear-gradient(135deg, var(--primary), #e63946); color: #fff; text-decoration: none; font-size: 1rem; font-weight: 700; border-radius: 50px; border: none; cursor: pointer; box-shadow: 0 8px 30px rgba(255,107,53,0.4), 0 0 0 1px rgba(255,255,255,0.1); transition: all 0.3s; animation: fade-up 0.8s ease-out 0.8s both; position: relative; overflow: hidden; }
+        .cta-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); transition: left 0.5s; }
+        .cta-btn:hover::before { left: 100%; }
+        .cta-btn:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 15px 40px rgba(255,107,53,0.5); }
+        .scroll-indicator { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--text-muted); font-size: 0.75rem; animation: fade-up 0.8s ease-out 1.2s both; }
+        .scroll-indicator i { font-size: 1rem; color: var(--primary); animation: bounce-down 2s infinite; }
+        @keyframes bounce-down { 0%,100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
+
+        /* Section Headers */
+        .section-header { text-align: center; margin-bottom: 45px; }
+        .section-label { display: inline-block; color: var(--primary); font-size: 0.8rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 10px; position: relative; }
+        .section-label::before, .section-label::after { content: ''; position: absolute; top: 50%; width: 35px; height: 1px; background: var(--primary); opacity: 0.4; }
+        .section-label::before { right: calc(100% + 12px); } .section-label::after { left: calc(100% + 12px); }
+        .section-title { font-size: 2.5rem; font-weight: 900; color: var(--text); margin-bottom: 10px; line-height: 1.2; }
+        .section-title span { color: var(--primary); }
+        .section-subtitle { color: var(--text-muted); font-size: 1rem; max-width: 500px; margin: 0 auto; }
+
+        /* Menu */
+        .menu-section { padding: 90px 5%; position: relative; z-index: 1; background: linear-gradient(180deg, #121212 0%, var(--dark) 100%); }
+        .search-wrap { max-width: 500px; margin: 0 auto 40px; position: relative; }
+        .search-box { width: 100%; padding: 14px 50px 14px 20px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; color: var(--text); font-family: 'Cairo', sans-serif; font-size: 0.95rem; transition: all 0.3s; }
+        .search-box:focus { outline: none; border-color: var(--primary); background: rgba(255,255,255,0.06); box-shadow: 0 0 0 4px rgba(255,107,53,0.1), 0 10px 40px rgba(0,0,0,0.3); }
+        .search-box::placeholder { color: rgba(255,255,255,0.3); }
+        .search-wrap i { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); color: var(--primary); font-size: 1rem; }
+        .search-stats { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 25px; }
+        .search-stats span { color: var(--primary); font-weight: 700; }
+
+        /* Category */
+        .category-block { margin-bottom: 50px; }
+        .category-header { display: flex; align-items: center; gap: 12px; margin-bottom: 25px; padding: 0 5px; }
+        .category-icon { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, var(--primary), #e63946); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: #fff; box-shadow: 0 6px 20px rgba(255,107,53,0.3); }
+        .category-title-text { font-size: 1.3rem; font-weight: 700; color: var(--text); }
+        .category-count { margin-right: auto; background: rgba(255,255,255,0.05); padding: 5px 14px; border-radius: 50px; font-size: 0.75rem; color: var(--text-muted); border: 1px solid rgba(255,255,255,0.08); }
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+
+        /* Menu Card */
+        .menu-card { background: var(--card); border-radius: 18px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); transition: all 0.4s cubic-bezier(0.4,0,0.2,1); position: relative; }
+        .menu-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--primary), var(--secondary)); opacity: 0; transition: opacity 0.3s; z-index: 2; }
+        .menu-card:hover { transform: translateY(-6px); border-color: rgba(255,107,53,0.25); box-shadow: 0 20px 50px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,107,53,0.1); }
+        .menu-card:hover::before { opacity: 1; }
+        .menu-card-img { height: 180px; position: relative; overflow: hidden; background: linear-gradient(135deg, #252525, #1e1e1e); }
+        .menu-card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.4,0,0.2,1); }
+        .menu-card:hover .menu-card-img img { transform: scale(1.08); }
+        .img-placeholder { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: rgba(255,255,255,0.15); }
+        .img-placeholder i { font-size: 2.5rem; }
+        .img-placeholder span { font-size: 0.75rem; }
+        .dish-label { position: absolute; bottom: 10px; right: 10px; background: rgba(15,15,15,0.9); backdrop-filter: blur(10px); color: var(--primary); padding: 5px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(255,107,53,0.3); z-index: 2; }
+        .menu-card-content { padding: 18px; }
+        .menu-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; color: var(--text); }
+        .menu-card p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; margin-bottom: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .card-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .price-tag { display: flex; align-items: baseline; gap: 4px; }
+        .price-tag .amount { font-size: 1.3rem; font-weight: 900; color: var(--primary); }
+        .price-tag .currency { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+        .order-btn { display: flex; align-items: center; gap: 6px; padding: 9px 18px; background: linear-gradient(135deg, var(--green), #128C7E); color: #fff; border: none; border-radius: 10px; font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: all 0.3s; white-space: nowrap; box-shadow: 0 4px 15px rgba(37,211,102,0.3); }
+        .order-btn:hover { transform: scale(1.05); box-shadow: 0 8px 25px rgba(37,211,102,0.4); }
+
+        .no-results, .error-message { text-align: center; padding: 50px 20px; color: var(--text-muted); grid-column: 1 / -1; }
+        .no-results i, .error-message i { font-size: 3rem; color: var(--primary); margin-bottom: 15px; opacity: 0.4; display: block; }
+        .no-results h3, .error-message h3 { font-size: 1.2rem; margin-bottom: 8px; color: var(--text); }
+        .no-results p, .error-message p { font-size: 0.9rem; }
+
+        /* About */
+        .about-section { padding: 90px 5%; position: relative; z-index: 1; background: linear-gradient(180deg, var(--dark) 0%, #121212 100%); overflow: hidden; }
+        .about-section::before { content: ''; position: absolute; top: -80px; right: -80px; width: 350px; height: 350px; background: radial-gradient(circle, rgba(255,107,53,0.06) 0%, transparent 70%); pointer-events: none; }
+        .about-content { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: center; }
+        .about-text h2 { font-size: 2.2rem; font-weight: 900; margin-bottom: 18px; }
+        .about-text h2 span { color: var(--primary); }
+        .about-text p { color: var(--text-muted); font-size: 1rem; line-height: 1.9; margin-bottom: 16px; }
+        .about-stats { display: flex; gap: 25px; margin-top: 25px; }
+        .stat-item { text-align: center; }
+        .stat-item .num { font-size: 1.8rem; font-weight: 900; color: var(--primary); }
+        .stat-item .label { font-size: 0.8rem; color: var(--text-muted); }
+        .about-image { position: relative; border-radius: 22px; height: 350px; background: linear-gradient(135deg, rgba(255,107,53,0.1), rgba(247,195,49,0.05)); border: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .about-image::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 30% 30%, rgba(255,107,53,0.15) 0%, transparent 60%); }
+        .about-image i { font-size: 7rem; color: rgba(255,107,53,0.12); position: relative; z-index: 1; }
+
+        /* Contact */
+        .contact-section { padding: 90px 5%; position: relative; z-index: 1; background: linear-gradient(180deg, #121212 0%, var(--dark) 100%); }
+        .contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; max-width: 900px; margin: 0 auto; }
+        .contact-card { background: var(--card); padding: 30px 20px; border-radius: 18px; text-align: center; border: 1px solid rgba(255,255,255,0.06); transition: all 0.4s cubic-bezier(0.4,0,0.2,1); position: relative; overflow: hidden; }
+        .contact-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--primary), var(--secondary)); transform: scaleX(0); transition: transform 0.4s; }
+        .contact-card:hover::before { transform: scaleX(1); }
+        .contact-card:hover { transform: translateY(-5px); border-color: rgba(255,107,53,0.2); box-shadow: 0 15px 40px rgba(0,0,0,0.3); }
+        .icon-wrap { width: 55px; height: 55px; margin: 0 auto 15px; border-radius: 14px; background: linear-gradient(135deg, rgba(255,107,53,0.15), rgba(247,195,49,0.1)); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: var(--primary); border: 1px solid rgba(255,107,53,0.15); }
+        .contact-card h3 { font-size: 1rem; margin-bottom: 6px; color: var(--text); }
+        .contact-card p { color: var(--text-muted); font-size: 0.85rem; }
+
+        /* Footer */
+        .footer { background: #0a0a0a; padding: 45px 5% 25px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 1; }
+        .footer-logo { font-size: 1.6rem; font-weight: 900; color: var(--primary); margin-bottom: 18px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .footer-logo span { color: var(--secondary); }
+        .social-links { display: flex; justify-content: center; gap: 12px; margin-bottom: 20px; }
+        .social-links a { width: 42px; height: 42px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: all 0.3s; text-decoration: none; }
+        .social-links a:hover { color: var(--primary); border-color: rgba(255,107,53,0.3); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(255,107,53,0.15); }
+        .footer p { color: rgba(255,255,255,0.3); font-size: 0.8rem; }
+
+        /* WhatsApp Fixed */
+        .whatsapp-fixed { position: fixed; bottom: 20px; left: 20px; background: linear-gradient(135deg, var(--green), #128C7E); color: #fff; padding: 12px 24px; border-radius: 50px; font-weight: 700; text-decoration: none; border: none; cursor: pointer; box-shadow: 0 8px 30px rgba(37,211,102,0.35), 0 0 0 1px rgba(255,255,255,0.1); z-index: 999; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); display: flex; align-items: center; gap: 8px; font-size: 0.95rem; font-family: 'Cairo', sans-serif; animation: bounce-soft 3s infinite; }
+        .whatsapp-fixed:hover { transform: scale(1.08) translateY(-2px); box-shadow: 0 12px 40px rgba(37,211,102,0.5); }
+        @keyframes bounce-soft { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+        /* Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity 0.3s; }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-content { background: linear-gradient(145deg, #1a1a1a, #141414); border-radius: 22px; padding: 30px; width: 100%; max-width: 460px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 30px 60px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; transform: scale(0.95) translateY(20px); transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+        .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .modal-header h2 { color: var(--text); font-size: 1.1rem; display: flex; align-items: center; gap: 10px; }
+        .modal-header h2 i { color: var(--green); }
+        .modal-close { background: rgba(255,255,255,0.05); border: none; color: var(--text-muted); font-size: 0.9rem; cursor: pointer; width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .modal-close:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; margin-bottom: 6px; color: var(--text-muted); font-size: 0.8rem; font-weight: 600; }
+        .form-group input, .form-group textarea { width: 100%; padding: 11px 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: var(--text); font-family: 'Cairo', sans-serif; font-size: 0.88rem; transition: all 0.3s; }
+        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,107,53,0.15); }
+        .whatsapp-preview { background: #0b2e28; border-radius: 14px; padding: 18px; margin: 18px 0; font-family: 'Cairo', monospace; font-size: 0.8rem; line-height: 1.8; direction: rtl; text-align: right; white-space: pre-wrap; word-wrap: break-word; max-height: 200px; overflow-y: auto; border: 1px solid rgba(37,211,102,0.15); color: rgba(255,255,255,0.85); }
+        .whatsapp-preview-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--green); font-weight: 700; }
+        .btn-admin { width: 100%; padding: 12px; background: linear-gradient(135deg, var(--primary), #e63946); color: #fff; border: none; border-radius: 12px; font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; }
+        .btn-admin:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,107,53,0.4); }
+
+        /* Reveal */
+        .reveal { opacity: 0; transform: translateY(35px); transition: all 0.8s cubic-bezier(0.4,0,0.2,1); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+        @media (max-width: 768px) {
+            .hero-content h1 { font-size: 2.2rem; }
+            .hero-logo-wrap { width: 130px; height: 130px; }
+            .logo-text-main { font-size: 1.2rem; }
+            .sarmada-text { font-size: 1rem; letter-spacing: 5px; }
+            .nav-links { display: none; }
+            .about-content { grid-template-columns: 1fr; gap: 35px; }
+            .about-image { height: 250px; }
+            .about-stats { justify-content: center; }
+            .menu-grid { grid-template-columns: 1fr; }
+            .section-title { font-size: 2rem; }
+            .whatsapp-fixed { padding: 10px 18px; font-size: 0.85rem; bottom: 15px; left: 15px; }
+            .contact-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-logo">🔥</div>
+        <div class="loading-bar"></div>
+        <p>جاري تحميل القائمة...</p>
+    </div>
+
+    <div class="particles" id="particles"></div>
+
+    <nav class="navbar" id="navbar">
+        <div class="logo">
+            <i class="fas fa-fire fire-icon"></i>
+            Hot <span>Chicken</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#home" class="active">الرئيسية</a></li>
+            <li><a href="#menu">القائمة</a></li>
+            <li><a href="#about">من نحن</a></li>
+            <li><a href="#contact">تواصل معنا</a></li>
+        </ul>
+    </nav>
+
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <i class="fas fa-star" style="color:var(--secondary);"></i>
+                أفضل دجاج مقرمش في سرمدا
+            </div>
+            <div class="hero-logo-wrap">
+                <div class="hero-logo-glow"></div>
+                <div class="css-logo">
+                    <div class="logo-text-main">Hot<br>Chicken</div>
+                    <div class="logo-text-sub">SARMAADA</div>
+                </div>
+            </div>
+            <h1>
+                <span class="hot">Hot</span> <span class="chicken">Chicken</span>
+            </h1>
+            <div class="sarmada-text">SARMAADA</div>
+            <p>تجربة لا تُنسى من الدجاج المقرمش بنكهات فريدة ومكونات طازجة يومياً</p>
+            <a href="#menu" class="cta-btn">
+                <i class="fas fa-utensils"></i> استكشف القائمة
+            </a>
+        </div>
+        <div class="scroll-indicator">
+            <span>اسحب للأسفل</span>
+            <i class="fas fa-chevron-down"></i>
+        </div>
+    </section>
+
+    <section class="menu-section" id="menu">
+        <div class="section-header reveal">
+            <div class="section-label">قائمة الطعام</div>
+            <h2 class="section-title">اختار <span>طلبك</span></h2>
+            <p class="section-subtitle">تشكيلة متنوعة من الأطباق اللذيذة المحضرة بأجود المكونات</p>
+        </div>
+        <div class="search-wrap reveal">
+            <input type="text" id="searchInput" class="search-box" placeholder="ابحث عن طبق... (اسم، وصف، قسم، سعر)" oninput="searchMenu()">
+            <i class="fas fa-search"></i>
+        </div>
+        <div class="search-stats reveal" id="searchStats">
+            إجمالي الأطباق: <span id="totalCount">0</span>
+        </div>
+        <div id="menuContainer"></div>
+    </section>
+
+    <section class="about-section" id="about">
+        <div class="about-content">
+            <div class="about-text reveal">
+                <h2>قصة <span>Hot Chicken</span> Sarmada</h2>
+                <p>انطلقنا من شغفنا بالدجاج المشوي والنكهات الرائعة. في Hot Chicken Sarmada، نجمع بين الوصفات التقليدية والابتكار الحديث لنقدم لك تجربة طعام لا مثيل لها.</p>
+                <p>نستخدم أفضل المكونات الطازجة وبهارات مميزة لنمنحك نكهة فريدة مع كل قضمة. لدينا تشكيلة متنوعة تناسب جميع الأذواق!</p>
+                <div class="about-stats">
+                    <div class="stat-item">
+                        <div class="num">+50</div>
+                        <div class="label">طبق مميز</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="num">+5K</div>
+                        <div class="label">عميل سعيد</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="num">24/7</div>
+                        <div class="label">خدمة توصيل</div>
+                    </div>
+                </div>
+            </div>
+            <div class="about-image reveal">
+                <i class="fas fa-fire-alt"></i>
+            </div>
+        </div>
+    </section>
+
+    <section class="contact-section" id="contact">
+        <div class="section-header reveal">
+            <div class="section-label">تواصل معنا</div>
+            <h2 class="section-title">نحن <span>هنا</span> من أجلك</h2>
+            <p class="section-subtitle">تواصل معنا بأي وقت، فريقنا جاهز لخدمتك</p>
+        </div>
+        <div class="contact-grid">
+            <div class="contact-card reveal">
+                <div class="icon-wrap"><i class="fas fa-map-marker-alt"></i></div>
+                <h3>الموقع</h3>
+                <p>إدلب / سرمدا / جانب سوبر ماركت بين يديك</p>
+            </div>
+            <div class="contact-card reveal">
+                <div class="icon-wrap"><i class="fas fa-phone"></i></div>
+                <h3>الهاتف</h3>
+                <p>+963933917287</p>
+            </div>
+            <div class="contact-card reveal">
+                <div class="icon-wrap"><i class="fas fa-clock"></i></div>
+                <h3>ساعات العمل</h3>
+                <p>يومياً من 10:00 صباحاً - 3:00 منتصف الليل</p>
+            </div>
+            <div class="contact-card reveal">
+                <div class="icon-wrap"><i class="fas fa-envelope"></i></div>
+                <h3>البريد الإلكتروني</h3>
+                <p>info@hotchicken.sa</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="footer-logo">
+            <i class="fas fa-fire"></i> Hot <span>Chicken</span>
+        </div>
+        <div class="social-links">
+            <a href="https://facebook.com/hotchickensarmada" target="_blank" title="فيسبوك">
+                <i class="fab fa-facebook-f"></i>
+            </a>
+            <a href="#" title="إنستغرام"><i class="fab fa-instagram"></i></a>
+            <a href="#" title="تيك توك"><i class="fab fa-tiktok"></i></a>
+        </div>
+        <p>جميع الحقوق محفوظة © 2026 Hot Chicken Sarmada</p>
+    </footer>
+
+    <button class="whatsapp-fixed" onclick="openGeneralWhatsApp()">
+        <i class="fab fa-whatsapp"></i> اطلب الآن
+    </button>
+
+    <div class="modal-overlay" id="whatsappModal" onclick="closeWhatsAppModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2><i class="fab fa-whatsapp"></i> إرسال الطلب</h2>
+                <button class="modal-close" onclick="closeWhatsAppModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="form-group">
+                <label>الطبق المختار</label>
+                <input type="text" id="modalDishName" readonly style="background:rgba(255,107,53,0.1);border-color:rgba(255,107,53,0.2);">
+            </div>
+            <div class="form-group">
+                <label>السعر</label>
+                <input type="text" id="modalDishPrice" readonly style="background:rgba(255,107,53,0.1);border-color:rgba(255,107,53,0.2);">
+            </div>
+            <div class="whatsapp-preview">
+                <div class="whatsapp-preview-header">
+                    <i class="fab fa-whatsapp"></i>
+                    <span>معاينة الرسالة</span>
+                </div>
+                <div id="whatsappPreviewText"></div>
+            </div>
+            <div class="form-group">
+                <label>عنوان التوصيل *</label>
+                <input type="text" id="customerAddress" placeholder="أدخل عنوانك الكامل">
+            </div>
+            <div class="form-group">
+                <label>رقم التواصل *</label>
+                <input type="text" id="customerPhone" placeholder="أدخل رقم هاتفك">
+            </div>
+            <div class="form-group">
+                <label>وقت التوصيل المفضل</label>
+                <input type="text" id="deliveryTime" placeholder="مثال: الآن - خلال 30 دقيقة">
+            </div>
+            <div class="form-group">
+                <label>ملاحظات إضافية</label>
+                <textarea id="orderNotes" placeholder="أي ملاحظات خاصة بالطلب..."></textarea>
+            </div>
+            <button class="btn-admin" onclick="sendWhatsAppOrder()" style="background:linear-gradient(135deg, #25D366, #128C7E);">
+                <i class="fab fa-whatsapp"></i> إرسال الطلب عبر واتساب
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const BIN_ID = '6a39f31fda38895dfeef11c4';
+        const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/' + BIN_ID + '/latest';
+        const PHONE = '+963933917287';
+        let dishes = [];
+        let currentWhatsAppDish = null;
+        const DEFAULT_TEMPLATE = `مرحباً! 👋
+أنا من موقع Hot Chicken Sarmada
+
+بدي أطلب:
+🍗 [اسم الطبق]
+💰 السعر: [السعر] TL
+
+📍 العنوان: [عنوان الزبون]
+📞 رقم التواصل: [رقم الزبون]
+⏰ وقت التوصيل المفضل: [الوقت]
+
+ملاحظات إضافية: [ملاحظات]`;
+
+        async function loadMenu(showLoading = true) {
+            if (showLoading) document.getElementById('loadingOverlay').classList.remove('hidden');
+            try {
+                const res = await fetch(JSONBIN_URL + '?t=' + Date.now(), { headers: { 'Content-Type': 'application/json' }, cache: 'no-cache' });
+                if (!res.ok) throw new Error('Failed');
+                const data = await res.json();
+                if (data.record && data.record.dishes) dishes = data.record.dishes;
+                else if (data.dishes) dishes = data.dishes;
+                else throw new Error('No dishes');
+                dishes.forEach((d, i) => { d.id = d.id || (i + 1); d.price = parseInt(d.price) || 0; if (!d.icon) { d.icon = d.category === 'مشويات' ? 'fa-fire-burner' : d.category === 'إضافات' ? 'fa-plus-circle' : d.category === 'وجبات' ? 'fa-box' : 'fa-burger'; } });
+                renderMenu();
+            } catch (e) {
+                document.getElementById('menuContainer').innerHTML = '<div class="error-message"><i class="fas fa-exclamation-triangle"></i><h3>تعذر تحميل القائمة</h3><p>تأكد من أن الـ Bin عام (Public) على JSONBin</p><button class="btn-admin" onclick="loadMenu()" style="margin-top:15px;max-width:200px;margin-left:auto;margin-right:auto;"><i class="fas fa-redo"></i> إعادة المحاولة</button></div>';
+            } finally {
+                if (showLoading) setTimeout(() => document.getElementById('loadingOverlay').classList.add('hidden'), 800);
+            }
+        }
+
+        function renderMenu(filteredDishes = null) {
+            const container = document.getElementById('menuContainer');
+            const display = filteredDishes || dishes;
+            document.getElementById('totalCount').textContent = display.length;
+            if (display.length === 0) { container.innerHTML = '<div class="no-results"><i class="fas fa-search"></i><h3>لا توجد نتائج</h3><p>جرب بحث مختلف</p></div>'; return; }
+            const cats = {};
+            display.forEach(d => { if (!cats[d.category]) cats[d.category] = []; cats[d.category].push(d); });
+            const catIcons = { 'مشويات': 'fa-fire-burner', 'سندويشات': 'fa-burger', 'وجبات': 'fa-box', 'إضافات': 'fa-plus-circle', 'مشروبات': 'fa-glass-water', 'حلويات': 'fa-cake-candles', 'أطباق رئيسية': 'fa-drumstick-bite' };
+            let html = '';
+            for (const [cat, items] of Object.entries(cats)) {
+                const icon = catIcons[cat] || 'fa-utensils';
+                html += '<div class="category-block reveal"><div class="category-header"><div class="category-icon"><i class="fas ' + icon + '"></i></div><div class="category-title-text">' + cat + '</div><div class="category-count">' + items.length + ' صنف</div></div><div class="menu-grid">';
+                html += items.map(d => {
+                    const img = d.image ? '<img src="' + d.image + '" alt="' + d.name + '" loading="lazy">' : '<div class="img-placeholder"><i class="fas ' + (d.icon || 'fa-burger') + '"></i><span>' + d.name + '</span></div>';
+                    return '<div class="menu-card" data-id="' + d.id + '"><div class="menu-card-img">' + img + '<div class="dish-label">' + d.name + '</div></div><div class="menu-card-content"><h3>' + d.name + '</h3><p>' + (d.desc || 'طبق لذيذ ومميز') + '</p><div class="card-footer"><div class="price-tag"><span class="amount">' + d.price + '</span><span class="currency">TL</span></div><button class="order-btn" onclick="openWhatsAppModal(' + d.id + ')"><i class="fab fa-whatsapp"></i> اطلب</button></div></div></div>';
+                }).join('');
+                html += '</div></div>';
+            }
+            container.innerHTML = html;
+            initReveal();
+        }
+
+        function searchMenu() {
+            const q = document.getElementById('searchInput').value.toLowerCase().trim();
+            if (!q) { renderMenu(); return; }
+            renderMenu(dishes.filter(d => d.name.toLowerCase().includes(q) || (d.desc && d.desc.toLowerCase().includes(q)) || d.category.toLowerCase().includes(q) || d.price.toString().includes(q)));
+        }
+
+        function openWhatsAppModal(id) {
+            const d = dishes.find(x => x.id === id);
+            if (!d) return;
+            currentWhatsAppDish = d;
+            const t = DEFAULT_TEMPLATE;
+            document.getElementById('modalDishName').value = d.name;
+            document.getElementById('modalDishPrice').value = d.price + ' TL';
+            document.getElementById('whatsappPreviewText').textContent = t.replace(/\[اسم الطبق\]/g, d.name).replace(/\[السعر\]/g, d.price + ' TL');
+            document.getElementById('whatsappModal').classList.add('active');
+        }
+
+        function openGeneralWhatsApp() {
+            window.open('https://wa.me/' + PHONE.replace(/[^0-9]/g, ''), '_blank');
+        }
+
+        function closeWhatsAppModal(e) {
+            if (e && e.target !== e.currentTarget) return;
+            document.getElementById('whatsappModal').classList.remove('active');
+            currentWhatsAppDish = null;
+            document.getElementById('customerAddress').value = '';
+            document.getElementById('customerPhone').value = '';
+            document.getElementById('deliveryTime').value = '';
+            document.getElementById('orderNotes').value = '';
+        }
+
+        function sendWhatsAppOrder() {
+            if (!currentWhatsAppDish) return;
+            const phone = PHONE.replace(/[^0-9]/g, '');
+            const t = DEFAULT_TEMPLATE;
+            const msg = t.replace(/\[اسم الطبق\]/g, currentWhatsAppDish.name).replace(/\[السعر\]/g, currentWhatsAppDish.price + ' TL').replace(/\[عنوان الزبون\]/g, document.getElementById('customerAddress').value || 'غير محدد').replace(/\[رقم الزبون\]/g, document.getElementById('customerPhone').value || 'غير محدد').replace(/\[الوقت\]/g, document.getElementById('deliveryTime').value || 'غير محدد').replace(/\[ملاحظات\]/g, document.getElementById('orderNotes').value || 'لا يوجد');
+            window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
+            closeWhatsAppModal();
+        }
+
+        // Particles
+        for (let i = 0; i < 25; i++) { const p = document.createElement('div'); p.className = 'particle'; p.style.left = Math.random() * 100 + '%'; p.style.width = p.style.height = (Math.random() * 6 + 3) + 'px'; p.style.animationDuration = (Math.random() * 15 + 10) + 's'; p.style.animationDelay = Math.random() * 10 + 's'; document.getElementById('particles').appendChild(p); }
+
+        // Smooth scroll + active nav
+        document.querySelectorAll('a[href^="#"]').forEach(a => a.addEventListener('click', function(e) { e.preventDefault(); const t = document.querySelector(this.getAttribute('href')); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
+        window.addEventListener('scroll', () => {
+            const n = document.getElementById('navbar');
+            if (window.scrollY > 50) n.classList.add('scrolled'); else n.classList.remove('scrolled');
+            ['home', 'menu', 'about', 'contact'].forEach(id => { const s = document.getElementById(id); const l = document.querySelector('a[href="#' + id + '"]'); if (s && l) { const r = s.getBoundingClientRect(); if (r.top <= 150 && r.bottom >= 150) { document.querySelectorAll('.nav-links a').forEach(x => x.classList.remove('active')); l.classList.add('active'); } } });
+        });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeWhatsAppModal(); });
+        function initReveal() { document.querySelectorAll('.reveal').forEach(el => { if (el.getBoundingClientRect().top < window.innerHeight - 80) el.classList.add('active'); }); }
+        window.addEventListener('scroll', initReveal);
+        window.addEventListener('load', () => { loadMenu(); initReveal(); });
+        setInterval(() => loadMenu(false), 300000);
+    </script>
+</body>
+</html>
